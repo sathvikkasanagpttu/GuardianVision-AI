@@ -1,0 +1,9 @@
+services:
+  guardianvision:
+    build: .
+    ports: ["8000:8000"]
+    environment:
+      FALL_THRESHOLD: "0.80"
+      CONFIRMATION_FRAMES: "8"
+      PRIVACY_MODE: "true"
+    volumes: ["./incidents:/app/incidents"]

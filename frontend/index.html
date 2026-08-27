@@ -1,0 +1,38 @@
+<!doctype html><html><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>GuardianVision AI</title>
+<style>
+body{margin:0;background:#07111f;color:#eef5ff;font-family:system-ui,Arial}
+header{padding:20px 28px;border-bottom:1px solid #23354d;display:flex;justify-content:space-between}
+main{max-width:1250px;margin:auto;padding:24px}.grid{display:grid;grid-template-columns:2fr 1fr;gap:18px}
+.card{background:#101d2e;border:1px solid #263b55;border-radius:18px;padding:18px}
+img{width:100%;border-radius:12px;background:#03070d}.score{font-size:44px;font-weight:800}
+.badge{padding:7px 11px;border-radius:20px;background:#1b3654;display:inline-block}
+.row{display:flex;gap:10px;flex-wrap:wrap}@media(max-width:800px){.grid{grid-template-columns:1fr}}
+</style></head><body>
+<header><b>🛡️ GuardianVision AI</b><span id="status">Connecting…</span></header>
+<main><div class="grid">
+<div class="card"><h2>Live Monitoring</h2><img id="frame"><p><span class="badge" id="state">NORMAL</span></p><small id="time"></small></div>
+<div class="card"><h2>Fall Risk</h2><div class="score" id="score">0%</div>
+<p>Real-time decision score</p><h3>Signals</h3><ul id="reasons"><li>No active signals</li></ul></div></div>
+<div class="card" style="margin-top:18px"><h2>AI Modules</h2>
+<div class="row"><span class="badge">Pose Estimation</span><span class="badge">Temporal Analysis</span>
+<span class="badge">Risk Scoring</span><span class="badge">Tracking Ready</span>
+<span class="badge">Incident Recording</span><span class="badge">Alerts Ready</span></div></div>
+<div class="card" style="margin-top:18px"><h2>Incident History</h2><div id="incidents">Loading…</div></div>
+</main><script>
+const frame=document.getElementById('frame'), statusEl=document.getElementById('status');
+const ws=new WebSocket(`ws://${location.host}/ws`);
+ws.onopen=()=>statusEl.textContent='🟢 Live';
+ws.onclose=()=>statusEl.textContent='🔴 Offline';
+ws.onmessage=e=>{const d=JSON.parse(e.data);if(!d.frame)return;
+frame.src='data:image/jpeg;base64,'+d.frame;
+document.getElementById('score').textContent=Math.round(d.score*100)+'%';
+document.getElementById('state').textContent=d.state;
+document.getElementById('time').textContent=d.timestamp;
+document.getElementById('reasons').innerHTML=(d.reasons.length?d.reasons:['No active signals']).map(x=>`<li>${x}</li>`).join('');
+};
+fetch('/api/incidents').then(r=>r.json()).then(x=>{
+document.getElementById('incidents').innerHTML=x.length?x.map(i=>`<p>${i.timestamp} — Person ${i.person_id} — ${Math.round(i.confidence*100)}%</p>`).join(''):'No incidents recorded.';
+});
+</script></body></html>
